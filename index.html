@@ -1,0 +1,1719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Premium 6-Max Poker Interface</title>
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    
+    :root{
+        --table-w: 900px;
+        --table-h: 520px;
+        --bg: #0a0a0a;
+        --felt: #1a4d2e;
+        --felt-inner: #0f3620;
+        --card-w: 45px;
+        --card-h: 60px;
+        --spade: #1a1a1a;
+        --heart: #dc2626;
+        --diamond: #2563eb;
+        --club: #16a34a;
+        --gold: #fbbf24;
+    }
+    
+    * {
+        box-sizing: border-box;
+    }
+    
+    body {
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%);
+        color: #f3f4f6;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px 200px 20px;
+        min-height: 100vh;
+        margin: 0;
+    }
+    
+    h1 {
+        margin-bottom: 20px;
+        font-weight: 700;
+        font-size: 2rem;
+        background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    
+    .controls {
+        margin-bottom: 40px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .sync-controls {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-left: auto;
+    }
+    
+    .sync-btn, .import-btn, .export-btn {
+        padding: 12px 24px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .sync-btn {
+        background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.4);
+    }
+    
+    .sync-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(139, 92, 246, 0.5);
+    }
+    
+    .import-btn {
+        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+    
+    .export-btn {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+    }
+    
+    .gist-modal {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: rgba(20, 20, 20, 0.98);
+        border: 2px solid var(--gold);
+        border-radius: 16px;
+        padding: 24px;
+        z-index: 1000;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+        max-width: 500px;
+        width: 90%;
+    }
+    
+    .gist-modal h3 {
+        color: var(--gold);
+        margin-bottom: 16px;
+    }
+    
+    .gist-modal input {
+        width: 100%;
+        padding: 12px;
+        margin-bottom: 16px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid #374151;
+        color: #fff;
+        border-radius: 6px;
+        font-size: 1rem;
+    }
+    
+    .gist-modal button {
+        margin-right: 10px;
+    }
+    
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        z-index: 999;
+    }
+    
+    .status-message {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 24px;
+        border-radius: 8px;
+        font-weight: 600;
+        z-index: 1001;
+        animation: slideIn 0.3s ease;
+    }
+    
+    .status-message.success {
+        background: #16a34a;
+        color: white;
+    }
+    
+    .status-message.error {
+        background: #dc2626;
+        color: white;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    .done-btn, .save-btn, .load-btn {
+        padding: 12px 32px;
+        font-size: 1rem;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .done-btn {
+        background: linear-gradient(135deg, var(--gold) 0%, #f59e0b 100%);
+        color: #000;
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.4);
+    }
+    
+    .done-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(251, 191, 36, 0.5);
+    }
+    
+    .done-btn.edit-mode {
+        background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+        color: #fff;
+    }
+    
+    .save-btn {
+        background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(22, 163, 74, 0.4);
+    }
+    
+    .save-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(22, 163, 74, 0.5);
+    }
+    
+    .load-btn {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #fff;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    }
+    
+    .load-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(37, 99, 235, 0.5);
+    }
+    
+    .scenario-name {
+        padding: 8px 16px;
+        font-size: 1rem;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid #374151;
+        color: #fff;
+        border-radius: 6px;
+        width: 200px;
+    }
+    
+    .scenario-name:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+        outline: none;
+    }
+    
+    .scenarios-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        margin-top: 5px;
+        background: rgba(20, 20, 20, 0.95);
+        border: 1px solid #374151;
+        border-radius: 8px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        z-index: 100;
+        max-height: 300px;
+        overflow-y: auto;
+        min-width: 250px;
+    }
+    
+    .scenario-item {
+        padding: 12px 16px;
+        cursor: pointer;
+        border-bottom: 1px solid #374151;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+    }
+    
+    .scenario-item:last-child {
+        border-bottom: none;
+    }
+    
+    .scenario-item:hover {
+        background: rgba(251, 191, 36, 0.1);
+    }
+    
+    .scenario-delete {
+        color: #dc2626;
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    .scenario-delete:hover {
+        background: rgba(220, 38, 38, 0.2);
+    }
+    
+    .load-container {
+        position: relative;
+    }
+    
+    .table {
+        position: relative;
+        width: var(--table-w);
+        height: var(--table-h);
+        background: 
+            radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.3) 70%),
+            linear-gradient(135deg, var(--felt) 0%, var(--felt-inner) 100%);
+        border-radius: 250px / 150px;
+        box-shadow: 
+            inset 0 0 100px rgba(0,0,0,0.8),
+            inset 0 0 50px rgba(0,0,0,0.5),
+            0 20px 60px rgba(0,0,0,0.8);
+        border: 8px solid #2d1810;
+        margin: 180px 200px;
+    }
+    
+    .table::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(135deg, #8b6914 0%, #4a3c28 50%, #8b6914 100%);
+        border-radius: 250px / 150px;
+        z-index: -1;
+    }
+    
+    .community {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        gap: 8px;
+        padding: 15px;
+        background: rgba(0,0,0,0.3);
+        border-radius: 15px;
+        box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+    }
+    
+    .card {
+        width: var(--card-w);
+        height: var(--card-h);
+        font-size: 20px;
+        font-weight: 700;
+        text-align: center;
+        border: 2px solid #fff;
+        border-radius: 6px;
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        color: #000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        transition: all 0.2s ease;
+    }
+    
+    .card.hidden {
+        background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%);
+        border-color: #2563eb;
+    }
+    
+    .card.hidden.has-value {
+        background: #fff;
+        border-color: #fff;
+    }
+    
+    .card input {
+        width: 100%;
+        height: 100%;
+        font-size: 18px;
+        font-weight: 700;
+        text-align: center;
+        border: none;
+        background: none;
+        outline: none;
+        color: inherit;
+        font-family: 'Inter', monospace;
+    }
+    
+    .card.spade, .card.spade input { color: var(--spade); }
+    .card.heart, .card.heart input { color: var(--heart); }
+    .card.diamond, .card.diamond input { color: var(--diamond); }
+    .card.club, .card.club input { color: var(--club); }
+    
+    .pot {
+        position: absolute;
+        top: calc(50% - 100px);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 1.1rem;
+        background: rgba(251, 191, 36, 0.2);
+        padding: 10px 20px;
+        border-radius: 25px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 4px 12px rgba(251, 191, 36, 0.3);
+    }
+    
+    .player {
+        position: absolute;
+        text-align: center;
+        color: #fff;
+    }
+    
+    .player-info {
+        background: linear-gradient(135deg, rgba(30,30,30,0.95) 0%, rgba(20,20,20,0.95) 100%);
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+        border: 1px solid rgba(255,255,255,0.1);
+        min-width: 140px;
+        position: relative;
+    }
+    
+    .inactive-toggle {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 20px;
+        height: 20px;
+        border: 1px solid #6b7280;
+        border-radius: 3px;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        color: #6b7280;
+        transition: all 0.2s ease;
+    }
+    
+    .inactive-toggle:hover {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.1);
+        color: #dc2626;
+    }
+    
+    .inactive-toggle.active {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: white;
+    }
+    
+    .player.inactive .player-info {
+        opacity: 0.5;
+        background: linear-gradient(135deg, rgba(20,20,20,0.95) 0%, rgba(15,15,15,0.95) 100%);
+    }
+    
+    .player.inactive .bet-container,
+    .player.inactive .hand-container {
+        display: none !important;
+    }
+    
+    .hand-container {
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        margin-top: 10px;
+        width: auto;
+        max-width: 400px;
+    }
+    
+    .player .badge {
+        width: 50px;
+        height: 50px;
+        line-height: 50px;
+        border-radius: 50%;
+        margin: 0 auto 8px;
+        font-size: 18px;
+        font-weight: 700;
+        background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+        border: 2px solid #6b7280;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    .stack-info {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 6px 0;
+        font-size: 0.9rem;
+        gap: 4px;
+    }
+    
+    .stack-label {
+        font-size: 0.7rem;
+        color: #9ca3af;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .stack-value {
+        font-weight: 600;
+        background: rgba(0,0,0,0.4);
+        padding: 2px 8px;
+        border-radius: 4px;
+        min-width: 50px;
+        text-align: right;
+    }
+    
+    .bet-container {
+        position: absolute;
+        background: rgba(20, 20, 20, 0.95);
+        border: 2px solid var(--gold);
+        border-radius: 20px;
+        padding: 6px 12px;
+        min-width: 120px;
+        text-align: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+    }
+    
+    .bet-container.check-mode {
+        border-color: #16a34a;
+    }
+    
+    .bet-container.check-mode .check-label {
+        color: #16a34a;
+        font-weight: 700;
+    }
+    
+    .bet-container.fold-mode {
+        border-color: #dc2626;
+    }
+    
+    .bet-container.fold-mode .fold-label {
+        color: #dc2626;
+        font-weight: 700;
+    }
+    
+    .action-toggle {
+        width: 20px;
+        height: 20px;
+        border: 1px solid #6b7280;
+        border-radius: 3px;
+        background: transparent;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        transition: all 0.2s ease;
+    }
+    
+    .check-toggle {
+        color: #16a34a;
+    }
+    
+    .check-toggle:hover {
+        border-color: #16a34a;
+        background: rgba(22, 163, 74, 0.1);
+    }
+    
+    .check-toggle.active {
+        background: #16a34a;
+        border-color: #16a34a;
+        color: white;
+    }
+    
+    .fold-toggle {
+        color: #dc2626;
+        font-size: 12px;
+        font-weight: 700;
+    }
+    
+    .fold-toggle:hover {
+        border-color: #dc2626;
+        background: rgba(220, 38, 38, 0.1);
+    }
+    
+    .fold-toggle.active {
+        background: #dc2626;
+        border-color: #dc2626;
+        color: white;
+    }
+    
+    .check-label, .fold-label {
+        display: none;
+        font-weight: 600;
+    }
+    
+    .check-label {
+        color: #16a34a;
+    }
+    
+    .fold-label {
+        color: #dc2626;
+    }
+    
+    .bet-container input {
+        background: none;
+        border: none;
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 1.1rem;
+        width: 60px;
+        text-align: center;
+    }
+    
+    .bet-container input:focus {
+        outline: none;
+        background: rgba(251, 191, 36, 0.1);
+        border-radius: 4px;
+    }
+    
+    /* Bet positions on the table - SB and UTG at similar height as BB */
+    .seat1 .bet-container { /* BB - top center */
+        top: 190px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .seat2 .bet-container { /* SB - similar height as BB, slightly lower */
+        top: 210px;
+        left: 35%;
+        transform: translateX(-50%);
+    }
+    
+    .seat3 .bet-container { /* BTN - bottom left */
+        bottom: 180px;
+        left: 37%;
+        transform: translateX(-50%);
+    }
+    
+    .seat4 .bet-container { /* CO - bottom center */
+        bottom: 190px;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+    
+    .seat5 .bet-container { /* HJ - bottom right */
+        bottom: 180px;
+        right: 37%;
+        transform: translateX(50%);
+    }
+    
+    .seat6 .bet-container { /* UTG - similar height as BB, slightly lower */
+        top: 210px;
+        right: 35%;
+        transform: translateX(50%);
+    }
+    
+    .view-mode .bet-container {
+        border-color: rgba(251, 191, 36, 0.5);
+    }
+    
+    .view-mode .bet-container input {
+        pointer-events: none;
+    }
+    
+    .view-mode .action-toggle {
+        display: none !important;
+    }
+    
+    .view-mode .inactive-toggle {
+        display: none !important;
+    }
+    
+    .hand {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+    }
+    
+    .hand .card {
+        width: var(--card-w);
+        height: var(--card-h);
+        font-size: 20px;
+    }
+    
+    .hand input {
+        font-size: 18px;
+    }
+    
+    input[type=number], input[type=text] {
+        background: rgba(0,0,0,0.4);
+        border: 1px solid #374151;
+        color: #fff;
+        padding: 4px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+    
+    input[type=number]:focus, input[type=text]:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 2px rgba(251, 191, 36, 0.2);
+    }
+    
+    /* Hide inputs when done */
+    .view-mode input {
+        border: none;
+        background: none;
+        pointer-events: none;
+        text-align: center;
+    }
+    
+    .view-mode .card.hidden:not(.has-value) {
+        opacity: 0;
+        visibility: hidden;
+    }
+    
+    .view-mode .stack-value {
+        background: none;
+    }
+    
+    /* Positions - outside the table, evenly distributed */
+    .seat1 { /* BB - top center */
+        top: -170px; 
+        left: 50%; 
+        transform: translateX(-50%);
+    }
+    .seat2 { /* SB - top left */
+        top: -120px; 
+        left: 15%; 
+        transform: translateX(-50%);
+    }
+    .seat3 { /* BTN - bottom left */
+        bottom: -120px; 
+        left: 15%; 
+        transform: translateX(-50%);
+    }
+    .seat4 { /* CO - bottom center */
+        bottom: -170px; 
+        left: 50%; 
+        transform: translateX(-50%);
+    }
+    .seat5 { /* HJ - bottom right */
+        bottom: -120px; 
+        right: 15%; 
+        transform: translateX(50%);
+    }
+    .seat6 { /* UTG - top right */
+        top: -120px; 
+        right: 15%; 
+        transform: translateX(50%);
+    }
+    
+    /* Dealer button */
+    .dealer-btn {
+        position: absolute;
+        width: 32px;
+        height: 32px;
+        background: linear-gradient(135deg, #fff 0%, #e5e7eb 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: #1a1a1a;
+        font-size: 14px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        top: -15px;
+        right: -15px;
+    }
+    
+    .add-card-btn {
+        width: 40px;
+        height: 60px;
+        border: 2px dashed #6b7280;
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #6b7280;
+        font-size: 24px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    /* Adjust hand positions for top/bottom players */
+    .seat1 .hand-container,
+    .seat2 .hand-container,
+    .seat6 .hand-container {
+        top: auto;
+        bottom: 100%;
+        margin-bottom: 10px;
+        margin-top: 0;
+    }
+    
+    .seat3 .hand-container,
+    .seat4 .hand-container,
+    .seat5 .hand-container {
+        top: 100%;
+        margin-top: 10px;
+    }
+    
+    .add-card-btn:hover {
+        border-color: var(--gold);
+        color: var(--gold);
+        background: rgba(251, 191, 36, 0.1);
+    }
+    
+    .view-mode .add-card-btn {
+        display: none;
+    }
+</style>
+</head>
+<body>
+<h1>Premium 6-Max Poker Interface</h1>
+
+<div class="controls">
+    <button class="done-btn" onclick="toggleViewMode()">Done</button>
+    <input type="text" class="scenario-name" placeholder="Scenario name..." id="scenarioName">
+    <button class="save-btn" onclick="saveScenario()">Save</button>
+    <div class="load-container">
+        <button class="load-btn" onclick="toggleLoadMenu()">Load</button>
+        <div class="scenarios-dropdown" id="scenariosDropdown" style="display: none;"></div>
+    </div>
+    <div class="sync-controls">
+        <button class="export-btn" onclick="exportScenarios()">Export</button>
+        <button class="import-btn" onclick="importScenarios()">Import</button>
+        <button class="sync-btn" onclick="showGistModal()">Cloud Sync</button>
+    </div>
+</div>
+
+<input type="file" id="importFile" style="display: none;" accept=".json" onchange="handleImportFile(event)">
+
+<div class="table" id="pokerTable">
+    <div class="pot">
+        <span>Pot: </span>
+        <input type="number" id="potValue" value="7.5" step="0.5" style="width: 80px;">
+        <span> BB</span>
+    </div>
+
+    <div class="community">
+        <div class="card"><input type="text" maxlength="3" value="5h"></div>
+        <div class="card"><input type="text" maxlength="3" value="7d"></div>
+        <div class="card"><input type="text" maxlength="3" value="9c"></div>
+        <div class="card"><input type="text" maxlength="3" placeholder="??"></div>
+        <div class="card"><input type="text" maxlength="3" placeholder="??"></div>
+    </div>
+
+    <!-- Player positions -->
+    <div class="player seat1" data-position="BB">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">BB</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="92.5" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player seat2" data-position="SB">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">SB</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="100" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player seat3" data-position="BTN">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">BTN</div>
+            <div class="dealer-btn">D</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="100" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" value="4c"></div>
+                <div class="card hidden"><input type="text" maxlength="3" value="5h"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player seat4" data-position="CO">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">CO</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="100" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player seat5" data-position="HJ">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">HJ</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="100" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="player seat6" data-position="UTG">
+        <div class="player-info">
+            <button class="inactive-toggle" onclick="toggleInactive(this)">×</button>
+            <div class="badge">UTG</div>
+            <div class="stack-info">
+                <span class="stack-label">Stack:</span>
+                <input type="number" class="stack-value" value="100" step="0.5">
+                <span style="color: #9ca3af;">BB</span>
+            </div>
+        </div>
+        <div class="bet-container">
+            <button class="action-toggle check-toggle" onclick="toggleCheck(this)">✓</button>
+            <button class="action-toggle fold-toggle" onclick="toggleFold(this)">F</button>
+            <input type="number" value="0" step="0.5" placeholder="0">
+            <span class="check-label">Check</span>
+            <span class="fold-label">Fold</span>
+            <span style="color: var(--gold);">BB</span>
+        </div>
+        <div class="hand-container">
+            <div class="hand" data-max-cards="6">
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <div class="card hidden"><input type="text" maxlength="3" placeholder="?"></div>
+                <button class="add-card-btn" onclick="addCard(this)">+</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let viewMode = false;
+
+function suitClass(ch) {
+    if (!ch) return '';
+    switch (ch.toLowerCase()) {
+        case '♠': case 's': return 'spade';
+        case '♥': case 'h': return 'heart';
+        case '♦': case 'd': return 'diamond';
+        case '♣': case 'c': return 'club';
+        default: return '';
+    }
+}
+
+function updateCardColors() {
+    document.querySelectorAll('.card').forEach(card => {
+        const inp = card.querySelector('input');
+        if (!inp) return;
+        let txt = inp.value.trim();
+        card.classList.remove('spade', 'heart', 'diamond', 'club', 'has-value');
+        
+        // Add has-value class for hole cards with values
+        if (card.classList.contains('hidden') && txt.length > 0 && txt !== '?') {
+            card.classList.add('has-value');
+        }
+        
+        if (!txt.length || txt === '?') return;
+        let suitCh = txt.slice(-1);
+        let cls = suitClass(suitCh);
+        if (cls) card.classList.add(cls);
+    });
+}
+
+function formatCardInput(e) {
+    let val = e.target.value;
+    if (val.length >= 1 && val !== '?') {
+        e.target.value = val[0].toUpperCase() + val.slice(1).toLowerCase();
+    }
+}
+
+function addCard(btn) {
+    const hand = btn.parentElement;
+    const currentCards = hand.querySelectorAll('.card').length;
+    const maxCards = parseInt(hand.dataset.maxCards);
+    
+    if (currentCards < maxCards) {
+        const newCard = document.createElement('div');
+        newCard.className = 'card hidden';
+        newCard.innerHTML = '<input type="text" maxlength="3" placeholder="?">';
+        
+        hand.insertBefore(newCard, btn);
+        
+        const input = newCard.querySelector('input');
+        input.addEventListener('input', () => {
+            formatCardInput(event);
+            updateCardColors();
+        });
+        input.addEventListener('focus', e => e.target.select());
+        
+        if (hand.querySelectorAll('.card').length >= maxCards) {
+            btn.style.display = 'none';
+        }
+    }
+}
+
+function toggleInactive(button) {
+    const player = button.closest('.player');
+    
+    if (button.classList.contains('active')) {
+        // Reactivate player
+        button.classList.remove('active');
+        player.classList.remove('inactive');
+    } else {
+        // Deactivate player
+        button.classList.add('active');
+        player.classList.add('inactive');
+        
+        // Reset bet values for inactive player
+        const betInput = player.querySelector('.bet-container input[type="number"]');
+        if (betInput) {
+            betInput.value = 0;
+            betInput.dataset.isCheck = 'false';
+            betInput.dataset.isFold = 'false';
+        }
+    }
+}
+
+function toggleCheck(button) {
+    const container = button.parentElement;
+    const input = container.querySelector('input[type="number"]');
+    const checkLabel = container.querySelector('.check-label');
+    const foldLabel = container.querySelector('.fold-label');
+    const bbLabel = container.querySelector('span[style*="--gold"]');
+    const foldButton = container.querySelector('.fold-toggle');
+    
+    if (button.classList.contains('active')) {
+        // Deactivate check mode
+        button.classList.remove('active');
+        container.classList.remove('check-mode');
+        input.style.display = 'inline';
+        checkLabel.style.display = 'none';
+        bbLabel.style.display = 'inline';
+        input.dataset.isCheck = 'false';
+    } else {
+        // Activate check mode
+        button.classList.add('active');
+        container.classList.add('check-mode');
+        container.classList.remove('fold-mode');
+        foldButton.classList.remove('active');
+        input.style.display = 'none';
+        checkLabel.style.display = 'inline';
+        foldLabel.style.display = 'none';
+        bbLabel.style.display = 'none';
+        input.dataset.isCheck = 'true';
+        input.dataset.isFold = 'false';
+        input.value = 0; // Check is essentially a 0 bet
+    }
+}
+
+function toggleFold(button) {
+    const container = button.parentElement;
+    const input = container.querySelector('input[type="number"]');
+    const checkLabel = container.querySelector('.check-label');
+    const foldLabel = container.querySelector('.fold-label');
+    const bbLabel = container.querySelector('span[style*="--gold"]');
+    const checkButton = container.querySelector('.check-toggle');
+    
+    if (button.classList.contains('active')) {
+        // Deactivate fold mode
+        button.classList.remove('active');
+        container.classList.remove('fold-mode');
+        input.style.display = 'inline';
+        foldLabel.style.display = 'none';
+        bbLabel.style.display = 'inline';
+        input.dataset.isFold = 'false';
+    } else {
+        // Activate fold mode
+        button.classList.add('active');
+        container.classList.add('fold-mode');
+        container.classList.remove('check-mode');
+        checkButton.classList.remove('active');
+        input.style.display = 'none';
+        foldLabel.style.display = 'inline';
+        checkLabel.style.display = 'none';
+        bbLabel.style.display = 'none';
+        input.dataset.isFold = 'true';
+        input.dataset.isCheck = 'false';
+        input.value = 0; // Fold is also a 0 bet
+    }
+}
+
+function calculateTotalPot() {
+    const potInput = document.getElementById('potValue');
+    const currentPot = parseFloat(potInput.value) || 0;
+    
+    let totalBets = 0;
+    document.querySelectorAll('.player:not(.inactive) .bet-container input').forEach(input => {
+        if (input.dataset.isCheck !== 'true' && input.dataset.isFold !== 'true') {
+            const betValue = parseFloat(input.value) || 0;
+            totalBets += betValue;
+        }
+    });
+    
+    // Add bets to pot
+    potInput.value = currentPot + totalBets;
+}
+
+function toggleViewMode() {
+    viewMode = !viewMode;
+    const table = document.getElementById('pokerTable');
+    const btn = document.querySelector('.done-btn');
+    
+    if (viewMode) {
+        // Calculate and add bets to pot before entering view mode
+        calculateTotalPot();
+        
+        table.classList.add('view-mode');
+        btn.textContent = 'Edit';
+        btn.classList.add('edit-mode');
+        
+        // Update card colors to ensure has-value class is set
+        updateCardColors();
+        
+        // Hide only empty hole cards
+        document.querySelectorAll('.hand-container .card').forEach(card => {
+            const input = card.querySelector('input');
+            if (!input.value || input.value === '?') {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Handle bet containers visibility
+        document.querySelectorAll('.bet-container').forEach(container => {
+            const input = container.querySelector('input[type="number"]');
+            const isCheck = input.dataset.isCheck === 'true';
+            const isFold = input.dataset.isFold === 'true';
+            const checkToggle = container.querySelector('.check-toggle');
+            const foldToggle = container.querySelector('.fold-toggle');
+            
+            if (!isCheck && !isFold && (!input.value || parseFloat(input.value) === 0)) {
+                container.style.display = 'none';
+            } else {
+                // Hide action buttons in view mode
+                checkToggle.style.display = 'none';
+                foldToggle.style.display = 'none';
+            }
+        });
+    } else {
+        table.classList.remove('view-mode');
+        btn.textContent = 'Done';
+        btn.classList.remove('edit-mode');
+        
+        // Show all cards again
+        document.querySelectorAll('.hand-container .card').forEach(card => {
+            card.style.display = 'flex';
+        });
+        
+        // Show all bet containers and action buttons
+        document.querySelectorAll('.bet-container').forEach(container => {
+            container.style.display = 'flex';
+            const checkToggle = container.querySelector('.check-toggle');
+            const foldToggle = container.querySelector('.fold-toggle');
+            checkToggle.style.display = 'flex';
+            foldToggle.style.display = 'flex';
+        });
+    }
+}
+
+// Storage functions
+function saveScenario() {
+    const scenarioName = document.getElementById('scenarioName').value.trim();
+    if (!scenarioName) {
+        alert('Please enter a scenario name');
+        return;
+    }
+    
+    const scenario = {
+        name: scenarioName,
+        timestamp: new Date().toISOString(),
+        pot: document.getElementById('potValue').value,
+        players: [],
+        communityCards: []
+    };
+    
+    // Save community cards
+    document.querySelectorAll('.community .card input').forEach(input => {
+        scenario.communityCards.push(input.value);
+    });
+    
+    // Save player data
+    document.querySelectorAll('.player').forEach(player => {
+        const position = player.dataset.position;
+        const isInactive = player.classList.contains('inactive');
+        const stackValue = player.querySelector('.stack-value').value;
+        const betInput = player.querySelector('.bet-container input[type="number"]');
+        const betValue = betInput.value;
+        const isCheck = betInput.dataset.isCheck === 'true';
+        const isFold = betInput.dataset.isFold === 'true';
+        
+        const holeCards = [];
+        player.querySelectorAll('.hand .card input').forEach(input => {
+            if (input.value) {
+                holeCards.push(input.value);
+            }
+        });
+        
+        scenario.players.push({
+            position,
+            isInactive,
+            stackValue,
+            betValue,
+            isCheck,
+            isFold,
+            holeCards
+        });
+    });
+    
+    // Save to localStorage
+    let savedScenarios = JSON.parse(localStorage.getItem('pokerScenarios') || '[]');
+    
+    // Check if scenario name already exists
+    const existingIndex = savedScenarios.findIndex(s => s.name === scenarioName);
+    if (existingIndex !== -1) {
+        if (confirm('Scenario already exists. Overwrite?')) {
+            savedScenarios[existingIndex] = scenario;
+        } else {
+            return;
+        }
+    } else {
+        savedScenarios.push(scenario);
+    }
+    
+    localStorage.setItem('pokerScenarios', JSON.stringify(savedScenarios));
+    alert('Scenario saved successfully!');
+}
+
+function loadScenario(scenarioName) {
+    console.log('Loading scenario:', scenarioName);
+    
+    const savedScenarios = JSON.parse(localStorage.getItem('pokerScenarios') || '[]');
+    const scenario = savedScenarios.find(s => s.name === scenarioName);
+    
+    if (!scenario) {
+        alert('Scenario not found');
+        return;
+    }
+    
+    // Reset to edit mode if in view mode
+    const table = document.getElementById('pokerTable');
+    const btn = document.querySelector('.done-btn');
+    if (table.classList.contains('view-mode')) {
+        toggleViewMode();
+    }
+    
+    // Load pot
+    document.getElementById('potValue').value = scenario.pot || 0;
+    document.getElementById('scenarioName').value = scenario.name;
+    
+    // Load community cards
+    const communityInputs = document.querySelectorAll('.community .card input');
+    communityInputs.forEach((input, index) => {
+        if (scenario.communityCards && scenario.communityCards[index]) {
+            input.value = scenario.communityCards[index];
+        } else {
+            input.value = '';
+        }
+    });
+    
+    // Load player data
+    if (scenario.players) {
+        scenario.players.forEach(playerData => {
+            const player = document.querySelector(`.player[data-position="${playerData.position}"]`);
+            if (!player) return;
+            
+            // Set inactive state
+            const inactiveToggle = player.querySelector('.inactive-toggle');
+            if (playerData.isInactive && !player.classList.contains('inactive')) {
+                inactiveToggle.click();
+            } else if (!playerData.isInactive && player.classList.contains('inactive')) {
+                inactiveToggle.click();
+            }
+            
+            // Set stack
+            const stackInput = player.querySelector('.stack-value');
+            if (stackInput) {
+                stackInput.value = playerData.stackValue || 100;
+            }
+            
+            // Set bet/check/fold
+            const betContainer = player.querySelector('.bet-container');
+            const betInput = betContainer.querySelector('input[type="number"]');
+            const checkToggle = betContainer.querySelector('.check-toggle');
+            const foldToggle = betContainer.querySelector('.fold-toggle');
+            
+            // Reset states first
+            if (checkToggle.classList.contains('active')) {
+                checkToggle.click();
+            }
+            if (foldToggle.classList.contains('active')) {
+                foldToggle.click();
+            }
+            
+            // Set new state
+            if (playerData.isCheck) {
+                checkToggle.click();
+            } else if (playerData.isFold) {
+                foldToggle.click();
+            } else {
+                betInput.value = playerData.betValue || 0;
+            }
+            
+            // Clear existing hole cards beyond the first 2
+            const handContainer = player.querySelector('.hand');
+            const existingCards = handContainer.querySelectorAll('.card');
+            for (let i = 2; i < existingCards.length; i++) {
+                existingCards[i].remove();
+            }
+            
+            // Load hole cards
+            const cardInputs = player.querySelectorAll('.hand .card input');
+            if (playerData.holeCards) {
+                // Clear existing values first
+                cardInputs.forEach(input => input.value = '');
+                
+                playerData.holeCards.forEach((card, index) => {
+                    if (index < 2 && cardInputs[index]) {
+                        cardInputs[index].value = card;
+                    } else if (index >= 2) {
+                        // Add additional cards
+                        const addBtn = player.querySelector('.add-card-btn');
+                        if (addBtn) {
+                            addCard(addBtn);
+                            const newCardInputs = player.querySelectorAll('.hand .card input');
+                            if (newCardInputs[index]) {
+                                newCardInputs[index].value = card;
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    // Update card colors
+    updateCardColors();
+    
+    // Close dropdown
+    document.getElementById('scenariosDropdown').style.display = 'none';
+    
+    console.log('Scenario loaded successfully');
+}
+
+function deleteScenario(scenarioName, event) {
+    event.stopPropagation();
+    
+    if (!confirm(`Delete scenario "${scenarioName}"?`)) {
+        return;
+    }
+    
+    let savedScenarios = JSON.parse(localStorage.getItem('pokerScenarios') || '[]');
+    savedScenarios = savedScenarios.filter(s => s.name !== scenarioName);
+    localStorage.setItem('pokerScenarios', JSON.stringify(savedScenarios));
+    
+    // Refresh dropdown
+    showScenariosDropdown();
+}
+
+function toggleLoadMenu() {
+    const dropdown = document.getElementById('scenariosDropdown');
+    if (dropdown.style.display === 'none') {
+        showScenariosDropdown();
+    } else {
+        dropdown.style.display = 'none';
+    }
+}
+
+function showScenariosDropdown() {
+    const dropdown = document.getElementById('scenariosDropdown');
+    const savedScenarios = JSON.parse(localStorage.getItem('pokerScenarios') || '[]');
+    
+    dropdown.innerHTML = '';
+    
+    if (savedScenarios.length === 0) {
+        dropdown.innerHTML = '<div class="scenario-item">No saved scenarios</div>';
+    } else {
+        savedScenarios.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        savedScenarios.forEach((scenario, index) => {
+            const item = document.createElement('div');
+            item.className = 'scenario-item';
+            item.dataset.scenarioName = scenario.name;
+            item.dataset.scenarioIndex = index;
+            
+            const nameSpan = document.createElement('span');
+            nameSpan.textContent = scenario.name;
+            nameSpan.style.cursor = 'pointer';
+            nameSpan.style.flexGrow = '1';
+            
+            const deleteSpan = document.createElement('span');
+            deleteSpan.className = 'scenario-delete';
+            deleteSpan.textContent = '×';
+            
+            item.appendChild(nameSpan);
+            item.appendChild(deleteSpan);
+            dropdown.appendChild(item);
+            
+            // Add event listeners
+            nameSpan.addEventListener('click', function() {
+                console.log('Loading scenario:', scenario.name);
+                loadScenario(scenario.name);
+            });
+            
+            deleteSpan.addEventListener('click', function(e) {
+                e.stopPropagation();
+                deleteScenario(scenario.name, e);
+            });
+        });
+    }
+    
+    dropdown.style.display = 'block';
+}
+
+// Export/Import Functions
+function exportScenarios() {
+    const scenarios = localStorage.getItem('pokerScenarios') || '[]';
+    const blob = new Blob([scenarios], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `poker-scenarios-${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showStatus('Scenarios exported successfully!', 'success');
+}
+
+function importScenarios() {
+    document.getElementById('importFile').click();
+}
+
+function handleImportFile(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const imported = JSON.parse(e.target.result);
+            if (Array.isArray(imported)) {
+                const existing = JSON.parse(localStorage.getItem('pokerScenarios') || '[]');
+                const merged = [...existing];
+                
+                imported.forEach(importedScenario => {
+                    const exists = merged.findIndex(s => s.name === importedScenario.name);
+                    if (exists !== -1) {
+                        if (confirm(`Scenario "${importedScenario.name}" already exists. Overwrite?`)) {
+                            merged[exists] = importedScenario;
+                        }
+                    } else {
+                        merged.push(importedScenario);
+                    }
+                });
+                
+                localStorage.setItem('pokerScenarios', JSON.stringify(merged));
+                showStatus('Scenarios imported successfully!', 'success');
+            } else {
+                throw new Error('Invalid file format');
+            }
+        } catch (error) {
+            showStatus('Error importing file: ' + error.message, 'error');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = ''; // Reset file input
+}
+
+// GitHub Gist Sync
+function showGistModal() {
+    const existingModal = document.querySelector('.gist-modal');
+    if (existingModal) existingModal.remove();
+    
+    const modal = document.createElement('div');
+    modal.innerHTML = `
+        <div class="modal-overlay" onclick="closeGistModal()"></div>
+        <div class="gist-modal">
+            <h3>Cloud Sync with GitHub Gist</h3>
+            <p style="color: #9ca3af; margin-bottom: 16px;">
+                Enter a GitHub Gist ID to sync your scenarios across devices.
+                Leave empty to create a new Gist.
+            </p>
+            <input type="text" id="gistId" placeholder="Gist ID (optional)" 
+                   value="${localStorage.getItem('pokerGistId') || ''}">
+            <input type="password" id="githubToken" placeholder="GitHub Personal Access Token (required)" 
+                   value="${localStorage.getItem('pokerGithubToken') || ''}">
+            <p style="color: #6b7280; font-size: 0.875rem; margin: 8px 0;">
+                Need a token? <a href="https://github.com/settings/tokens/new?scopes=gist" 
+                                target="_blank" style="color: var(--gold);">Create one here</a>
+            </p>
+            <div style="margin-top: 20px;">
+                <button class="save-btn" onclick="saveToGist()">Save to Cloud</button>
+                <button class="load-btn" onclick="loadFromGist()">Load from Cloud</button>
+                <button class="done-btn" onclick="closeGistModal()">Cancel</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function closeGistModal() {
+    const modal = document.querySelector('.modal-overlay').parentElement;
+    if (modal) modal.remove();
+}
+
+async function saveToGist() {
+    const gistId = document.getElementById('gistId').value.trim();
+    const token = document.getElementById('githubToken').value.trim();
+    
+    if (!token) {
+        showStatus('GitHub token is required!', 'error');
+        return;
+    }
+    
+    // Save token for future use
+    localStorage.setItem('pokerGithubToken', token);
+    
+    const scenarios = localStorage.getItem('pokerScenarios') || '[]';
+    const gistData = {
+        description: 'Poker Scenarios Backup',
+        public: false,
+        files: {
+            'poker-scenarios.json': {
+                content: scenarios
+            }
+        }
+    };
+    
+    try {
+        let response;
+        if (gistId) {
+            // Update existing gist
+            response = await fetch(`https://api.github.com/gists/${gistId}`, {
+                method: 'PATCH',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify(gistData)
+            });
+        } else {
+            // Create new gist
+            response = await fetch('https://api.github.com/gists', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `token ${token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                },
+                body: JSON.stringify(gistData)
+            });
+        }
+        
+        if (response.ok) {
+            const result = await response.json();
+            localStorage.setItem('pokerGistId', result.id);
+            document.getElementById('gistId').value = result.id;
+            showStatus('Saved to cloud successfully!', 'success');
+        } else {
+            throw new Error(`GitHub API error: ${response.status}`);
+        }
+    } catch (error) {
+        showStatus('Error saving to cloud: ' + error.message, 'error');
+    }
+}
+
+async function loadFromGist() {
+    const gistId = document.getElementById('gistId').value.trim();
+    const token = document.getElementById('githubToken').value.trim();
+    
+    if (!gistId) {
+        showStatus('Gist ID is required to load!', 'error');
+        return;
+    }
+    
+    try {
+        const headers = {};
+        if (token) {
+            headers['Authorization'] = `token ${token}`;
+        }
+        
+        const response = await fetch(`https://api.github.com/gists/${gistId}`, {
+            headers: headers
+        });
+        
+        if (response.ok) {
+            const gist = await response.json();
+            const content = gist.files['poker-scenarios.json']?.content;
+            
+            if (content) {
+                const scenarios = JSON.parse(content);
+                localStorage.setItem('pokerScenarios', JSON.stringify(scenarios));
+                localStorage.setItem('pokerGistId', gistId);
+                if (token) {
+                    localStorage.setItem('pokerGithubToken', token);
+                }
+                showStatus('Loaded from cloud successfully!', 'success');
+                closeGistModal();
+                // Refresh the dropdown if it's open
+                const dropdown = document.getElementById('scenariosDropdown');
+                if (dropdown.style.display !== 'none') {
+                    showScenariosDropdown();
+                }
+            } else {
+                throw new Error('No poker scenarios found in gist');
+            }
+        } else {
+            throw new Error(`GitHub API error: ${response.status}`);
+        }
+    } catch (error) {
+        showStatus('Error loading from cloud: ' + error.message, 'error');
+    }
+}
+
+function showStatus(message, type) {
+    const existing = document.querySelector('.status-message');
+    if (existing) existing.remove();
+    
+    const status = document.createElement('div');
+    status.className = `status-message ${type}`;
+    status.textContent = message;
+    document.body.appendChild(status);
+    
+    setTimeout(() => {
+        status.remove();
+    }, 3000);
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+    const loadContainer = document.querySelector('.load-container');
+    const dropdown = document.getElementById('scenariosDropdown');
+    
+    if (!loadContainer.contains(e.target)) {
+        dropdown.style.display = 'none';
+    }
+});
+
+// Initialize
+document.querySelectorAll('.card input').forEach(inp => {
+    inp.addEventListener('input', () => {
+        formatCardInput(event);
+        updateCardColors();
+    });
+    inp.addEventListener('focus', e => e.target.select());
+});
+
+document.querySelectorAll('input[type=number]').forEach(inp => {
+    inp.addEventListener('focus', e => e.target.select());
+});
+
+updateCardColors();
+</script>
+</body>
+</html>
